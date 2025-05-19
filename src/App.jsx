@@ -7,6 +7,8 @@ function App() {
   // State gốc và state hiển thị
   const [allProducts, setAllProducts] = useState([])
   const [displayed, setDisplayed] = useState([])
+  const [limit, setLimit] = useState(5);
+  const [page, setPage] = useState();
 
   // Các state tìm kiếm + sắp xếp
   const [searchTerm, setSearchTerm] = useState("")
@@ -14,9 +16,10 @@ function App() {
 
 
 
+
   // Fetch data 
-  useEffect(() => {
-    fetch(url)
+  const fetchApi = useEffect(() => {
+    fetch(`${url}?limit=${limit}`)
       .then(res => res.json())
       .then(data => {
         setAllProducts(data.products || [])
@@ -24,10 +27,10 @@ function App() {
 
       })
       .catch(err => console.error(err))
-  }, [])
+  }, [url, limit])
 
 
-  //   searchTerm hoặc sortOrder thay đổi, recompute displayed
+  //   searchTerm hoặc sortOrder thay đổi,
   useEffect(() => {
     let filtered = allProducts
 
@@ -49,8 +52,23 @@ function App() {
       filtered = [...filtered].sort((a, b) => b.price - a.price)
     }
 
-    setDisplayed(filtered)
-  }, [allProducts, searchTerm, sortOrder])
+    // -- chỉnh sửa limit
+    if (setLimit === "") {
+      console.log("Chưa chọn");
+    } else if (setLimit === '5') {
+      setDisplayed(`${url}?limit=${setLimit}`)
+    } else if (setLimit === '10') {
+      setDisplayed(`${url}?limit=${setLimit}`)
+    } else if (setLimit === '20') {
+      setDisplayed(`${url}?limit=${setLimit}`)
+    } else if (setLimit === '50') {
+      setDisplayed(`${url}?limit=${setLimit}`)
+    }
+    console.log(`${url}?limit${limit}`);
+
+
+    setDisplayed(filtered);
+  }, [allProducts, limit, searchTerm, sortOrder])
 
 
   return (
@@ -84,14 +102,25 @@ function App() {
         Reset
       </button>
 
+      <select value={setLimit}
+        onChange={e => setLimit(e.target.value)}
+        style={{ marginLeft: 12 }} id="editLimit">
+        <option value="">Limit/ page</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+
 
       <ul style={{ marginTop: 20 }}>
         {displayed.map(p => (
           <li key={p.id} style={{ marginBottom: 8 }}>
-            <strong>{p.title}</strong> — Giá: ${p.price} — Loại: {p.category}
+            <strong>ID: ${p.id} - TITLE: {p.title}</strong> — Giá: ${p.price} — Loại: {p.category}
           </li>
         ))}
       </ul>
+      <button>left</button> <span>1</span> <button>right</button>
     </div>
   )
 }
