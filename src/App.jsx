@@ -1,68 +1,100 @@
-import React, { useEffect, useState } from 'react';
-import './App.css';
+import React, { useEffect, useState } from 'react'
+import './App.css'
+import { preview } from 'vite'
 
 function App() {
-  const url = "https://dummyjson.com/products";
+  const url = "https://dummyjson.com/products"
 
-  const [allProducts, setAllProducts] = useState([]);
-  const [displayed, setDisplayed] = useState([]);
-
+  // State gốc và state hiển thị
+  const [allProducts, setAllProducts] = useState([])
+  const [displayed, setDisplayed] = useState([])
   const [limit, setLimit] = useState(12);
   const [page, setPage] = useState(1);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState("");
+  // Các state tìm kiếm + sắp xếp
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortOrder, setSortOrder] = useState("")
 
-  // 1. Fetch data khi url, limit hoặc page thay đổi
+
+
+
+  // Fetch data 
   useEffect(() => {
-    const skip = (page - 1) * limit;
-    fetch(`${url}?limit=${limit}&skip=${skip}`)
+    let skip = (page - 1) * limit;
+    fetch(`${url}?limit=${limit}`)
       .then(res => res.json())
       .then(data => {
-        const products = data.products || [];
-        setAllProducts(products);
+        setAllProducts(data.products || [])
+        setDisplayed(data.products || [])
+
       })
-      .catch(console.error);
-  }, [url, limit, page]);
+      .catch(err => console.error(err))
+  }, [url, limit])
 
-  // 2. Lọc + sort khi allProducts, searchTerm, sortOrder thay đổi
+
+  //   searchTerm hoặc sortOrder thay đổi,
   useEffect(() => {
-    let filtered = allProducts;
+    let filtered = allProducts
 
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
+
+    // -- Tìm kiếm theo tên (case-insensitive)
+    if (searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase()
       filtered = filtered.filter(p =>
+
         p.title.toLowerCase().includes(term)
-      );
+      )
     }
 
+    // -- Sắp xếp theo giá
     if (sortOrder === "asc") {
-      filtered = [...filtered].sort((a, b) => a.price - b.price);
+      filtered = [...filtered].sort((a, b) => a.price - b.price)
     } else if (sortOrder === "desc") {
-      filtered = [...filtered].sort((a, b) => b.price - a.price);
+
+      filtered = [...filtered].sort((a, b) => b.price - a.price)
     }
 
-    setDisplayed(filtered);
-  }, [allProducts, searchTerm, sortOrder]);
+    // -- chỉnh sửa limit
+    if (setLimit === "") {
+      console.log("Chưa chọn");
 
-  // Hàm pagination
-  const handlePrev = () => setPage(p => Math.max(p - 1, 1));
-  const handleNext = () => setPage(p => p + 1);
+    } else if (setLimit === '5') {
+      setDisplayed(`${url}?limit=${setLimit}`)
+    } else if (setLimit === '10') {
+      setDisplayed(`${url}?limit=${setLimit}`)
+    } else if (setLimit === '20') {
+      setDisplayed(`${url}?limit=${setLimit}`)
+    } else if (setLimit === '50') {
+      setDisplayed(`${url}?limit=${setLimit}`)
+    }
+    console.log(`${url}?limit${limit}`);
+
+    //-- paginate
+    const handleLoadLeft = () => {
+      //
+      setPage(preview => preview + 1)
+    }
+    const handleLoadRight = () => {
+      //
+      setPage(preview => preview - 1)
+    }
+    setDisplayed(filtered);
+  }, [allProducts, limit, searchTerm, sortOrder])
+
 
   return (
     <div className="App">
       <h2>Danh sách sản phẩm</h2>
 
-      <input
-        type="text"
-        placeholder="Tìm kiếm theo tên..."
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
+
+
+      <input type="text" placeholder="Tìm kiếm theo tên..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+
         style={{ marginRight: 12 }}
       />
 
-      <select
-        value={sortOrder}
+
+      <select value={sortOrder}
         onChange={e => setSortOrder(e.target.value)}
       >
         <option value="">— Không sắp xếp —</option>
@@ -70,46 +102,38 @@ function App() {
         <option value="desc">Giá: Cao → Thấp</option>
       </select>
 
+
       <button
         onClick={() => {
-          setSearchTerm("");
-          setSortOrder("");
+          setSearchTerm("")
+          setSortOrder("")
         }}
         style={{ marginLeft: 12 }}
       >
         Reset
       </button>
 
-      <select
-        value={limit}
-        onChange={e => setLimit(Number(e.target.value))}
-        style={{ marginLeft: 12 }}
-      >
-        <option value={5}>5 / page</option>
-        <option value={10}>10 / page</option>
-        <option value={20}>20 / page</option>
-        <option value={50}>50 / page</option>
+      <select value={setLimit}
+        onChange={e => setLimit(e.target.value)}
+        style={{ marginLeft: 12 }} id="editLimit">
+        <option value="">Limit/page</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
       </select>
+
 
       <ul style={{ marginTop: 20 }}>
         {displayed.map(p => (
           <li key={p.id} style={{ marginBottom: 8 }}>
-            <strong>ID: {p.id} – {p.title}</strong> — Giá: ${p.price} — Loại: {p.category}
+            <strong>ID: ${p.id} - TITLE: {p.title}</strong> — Giá: ${p.price} — Loại: {p.category}
           </li>
         ))}
       </ul>
-
-      <div style={{ marginTop: 20 }}>
-        <button onClick={handlePrev} disabled={page === 1}>
-          ← Trang trước
-        </button>
-        <span style={{ margin: '0 12px' }}>Trang {page}</span>
-        <button onClick={handleNext}>
-          Trang sau →
-        </button>
-      </div>
+      <button onClick={handleLoadLeft}>left</button> <span>${page}</span> <button onClick={handleLoadRight}>right</button>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
